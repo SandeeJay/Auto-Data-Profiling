@@ -13,7 +13,7 @@ class Connections:
 
         try:
             paswrd = getpass.getpass("Password:")
-            conn = snowflake.connector.connect(user='wesanalytics', password=str(paswrd), account='hj05563.us-east-1', warehouse='DW_WES_ANALYTICS')
+            conn = snowflake.connector.connect(user='', password=str(paswrd), account='', warehouse='')
             if columns is not None:
                 query = "select " + str(columns).replace('[', '').replace(']', '').replace("'", '') + " from " + table + " limit 10"
             else:
