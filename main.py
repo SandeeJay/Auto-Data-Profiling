@@ -15,8 +15,8 @@ class Connections:
         :return: dataset
         """
         paswrd = getpass.getpass("Password:")
-        conn = snowflake.connector.connect(user='wesanalytics', password=str(paswrd), account='hj05563.us-east-1',
-                                           warehouse='DW_WES_ANALYTICS')
+        conn = snowflake.connector.connect(user='user_name', password=str(paswrd), account='my_snowflake_account',
+                                           warehouse='warehouse')
         query = '"select * from' + table + '"'
         dataset = pd.read_sql(query, conn)
         return dataset
