@@ -9,40 +9,47 @@ import snowflake.connector
 
 class Connections:
 
-    def connect_snowflake(self, table):
-        """
-        Connecting to the snowflake db
-        :return: dataset
-        """
-        paswrd = getpass.getpass("Password:")
-        conn = snowflake.connector.connect(user='wesanalytics', password=str(paswrd), account='hj05563.us-east-1',
-                                           warehouse='DW_WES_ANALYTICS')
-        query = '"select * from' + table + '"'
-        dataset = pd.read_sql(query, conn)
-        return dataset
+    def connect_snowflake(self, table, columns=None):
 
-    def connect_api(self, url, headers=None, data=None, method='GET', params=None, json_data=None, timeout=None):
+        try:
+            paswrd = getpass.getpass("Password:")
+            conn = snowflake.connector.connect(user='', password=str(paswrd), account='', warehouse='')
+            if columns is not None:
+                query = "select " + str(columns).replace('[', '').replace(']', '').replace("'", '') + " from " + table + " limit 10"
+            else:
+                query = "select * from " + table + " limit 10"
+            dataset = pd.read_sql(query, conn)
+            return dataset
+        except Exception as e:
+            print(e)
 
+    def connect_api(self, con_config):
+        # url, headers = None, data = None, method = 'GET', params = None, json_data = None
         """
-        Connecting to the API
-        :param url: api url
-        :param headers: request header
-        :param data: data for post call
-        :param method: request method
-        :param params: request parameters
-        :param json_data: request data (json)
-        :param timeout: request timeout
+        :param con_config: connection configuration
         :return: dataset
         """
         dataset = {}
 
         try:
+            headers, data, params, json_data = None, None, None, None
+            timeout = 60
+            if 'headers' in con_config:
+                headers = con_config['headers']
+            if 'params' in con_config:
+                params = con_config['params']
+            if 'timeout' in con_config:
+                timeout = con_config['timeout']
+            if 'data' in con_config:
+                data = con_config['data']
+            if 'json_data' in con_config:
+                json_data = con_config['json_data']
 
-            if method == 'GET':
-                res = requests.get(url, headers=headers, params=params, timeout=timeout)
+            if con_config['method'] == 'GET':
+                res = requests.get(con_config['url'], headers=headers, params=params, timeout=timeout)
 
-            elif method == 'POST':
-                res = requests.post(url, headers=headers, data=data, json=json_data, params=params, timeout=timeout)
+            elif con_config['method'] == 'POST':
+                res = requests.post(con_config['url'], headers=headers, data=data, json=json_data, params=params, timeout=timeout)
 
             if res:
                 json_obj = json.loads(res.content)
@@ -61,7 +68,7 @@ class Connections:
         :return: dataset
         """
         dataset = pd.read_csv(filepath, sep=sep)
-        return dataset
+        return dataset.head()
 
     def read_excel(self, filepath, sheet_name=0):
         """
@@ -74,18 +81,21 @@ class Connections:
 
 class Profiling(Connections):
 
-    def basic_profiling(self):
-        df = self.read_csv(filepath='', sep=',')
-        profile = ProfileReport(df)
-        profile.to_notebook_iframe()
+    def data_profiling(self, con_type, table=None, filepath=None, con_config=None, columns=None):
+        df = {}
+        if con_type == 'snowflake':
+            df = self.connect_snowflake(table=table, columns=columns)
+        elif con_type == 'api':
+            df = self.connect_api(con_config=con_config)
+        elif con_type == 'csv':
+            df = self.read_csv(filepath=filepath)
+        elif con_type == 'excel':
+            df = self.read_excel(filepath=filepath)
 
-    def explorative_profiling(self):
-        df = self.read_csv(filepath='', sep=',')
-        profile = ProfileReport(df, explorative=True)
-        profile.to_notebook_iframe()
+        if len(df):
+            profile = ProfileReport(df, explorative=True)
+            profile.to_notebook_iframe()
 
-
-
-
-
-
+if __name__ == '__main__':
+    con = Connections()
+    con.connect_snowflake(table='PROD_ODS.SRP.T_S_SRP_EMPBRIDGE__INTERVIEW__C', columns=["ID", "NAME", "CURRENCYISOCODE","CREATEDDATE","EMPBRIDGE__APPLICATION__C"])
