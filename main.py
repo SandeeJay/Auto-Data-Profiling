@@ -98,4 +98,4 @@ class Profiling(Connections):
 
 if __name__ == '__main__':
     con = Connections()
-    con.connect_snowflake(table='PROD_ODS.SRP.T_S_SRP_EMPBRIDGE__INTERVIEW__C', columns=["ID", "NAME", "CURRENCYISOCODE","CREATEDDATE","EMPBRIDGE__APPLICATION__C"])
+    con.connect_snowflake(table='', columns=[])
